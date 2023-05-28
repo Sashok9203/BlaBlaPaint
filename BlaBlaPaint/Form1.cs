@@ -13,6 +13,7 @@ namespace WinFormsApp2
 {
     public enum ShapeType
     {
+        Eraser,
         Line,
         FreeLine,
         MultiLine,
@@ -21,7 +22,9 @@ namespace WinFormsApp2
         Circle,
         FillCircle,
         Ellipse,
-        FillEllipse
+        FillEllipse,
+        Polygon,
+        FillPolygon
     }
 
     public partial class Form1 : Form
@@ -36,7 +39,7 @@ namespace WinFormsApp2
             Now,
             Skip
         }
-        
+
         private Graphics gr;
         private readonly Graphics clbg;
         private Bitmap bitmap;
@@ -48,9 +51,9 @@ namespace WinFormsApp2
         private Point tmp;
 
         private Line? line = null;
-        private FreeLine? fline = null;
-        private MultiShape? multiShape = null;
-        
+        private MultiLineShape? multiLShape = null;
+        private MultiRectangleShape? multiRShape = null;
+
 
         private int uPointer = -1, mouseDragUpdeqtsCount;
         private int undoPointer
@@ -70,7 +73,7 @@ namespace WinFormsApp2
             curentColor = Color.Black;
             pen = new(curentColor, 1);
             int index = 0;
-            toolStripDropDownButton.Image = toolImageList.Images[index]; ;
+            toolStripDropDownButton.Image = toolImageList.Images[1]; ;
             foreach (string name in Enum.GetNames<ShapeType>().ToArray())
             {
                 toolStripDropDownButton.DropDownItems.Add(name);
@@ -83,14 +86,12 @@ namespace WinFormsApp2
             colorLabelbitmap = new Bitmap(5, 5);
             clbg = Graphics.FromImage(colorLabelbitmap);
             colorLabel.Image = colorLabelbitmap;
-            curentBackColor = pictureBox.BackColor;
+            curentBackColor = Color.White;
             bitmap = new Bitmap(pictureBox.Width, pictureBox.Height);
             gr = Graphics.FromImage(bitmap);
             gr.Clear(curentBackColor);
-            reDraw();
             pictureBox.Image = bitmap;
             labelColorChange();
-
         }
 
         private void pictureBox_MouseDown(object sender, MouseEventArgs e)
@@ -100,7 +101,7 @@ namespace WinFormsApp2
                 switch (curentShapeType)
                 {
                     case ShapeType.Line:
-                        if (line == null)  line = new(pen, new Point(e.X, e.Y), new Point(e.X, e.Y));
+                        if (line == null) line = new(pen, new Point(e.X, e.Y), new Point(e.X, e.Y));
                         else
                         {
                             line.End = tmp;
@@ -110,11 +111,14 @@ namespace WinFormsApp2
                         }
                         break;
 
+                    case ShapeType.Polygon:
+                    case ShapeType.FillPolygon:
                     case ShapeType.MultiLine:
                     case ShapeType.FreeLine:
-                        fline ??= new(pen);
-                        fline.AddPoint(new Point(e.X, e.Y));
-                        fline.Free = curentShapeType == ShapeType.FreeLine;
+                        multiLShape ??= new(pen);
+                        multiLShape.AddPoint(new Point(e.X, e.Y));
+                        multiLShape.Type = curentShapeType == ShapeType.Polygon || curentShapeType == ShapeType.FillPolygon ?
+                                     ShapeType.MultiLine : curentShapeType;
                         break;
 
                     case ShapeType.Circle:
@@ -123,33 +127,37 @@ namespace WinFormsApp2
                     case ShapeType.FillEllipse:
                     case ShapeType.Rectangle:
                     case ShapeType.FillRectangle:
-                        if (multiShape == null)
+                        if (multiRShape == null)
                         {
-                            multiShape =  new(pen, curentShapeType);
+                            multiRShape = new(pen, curentShapeType);
                             tmp = new Point(e.X, e.Y);
-                            multiShape.Filed = curentShapeType == ShapeType.FillRectangle;
+                            multiRShape.Filed = curentShapeType == ShapeType.FillRectangle;
                         }
                         else
                         {
-                            addShape(multiShape);
-                            multiShape = null;
+                            addShape(multiRShape);
+                            multiRShape = null;
                         }
                         break;
 
-                   
+
                 }
             }
             else if (e.Button == MouseButtons.Right)
             {
                 switch (curentShapeType)
                 {
+                    case ShapeType.Polygon:
+                    case ShapeType.FillPolygon:
                     case ShapeType.MultiLine:
-                        if (fline != null && fline.PointCount != 1)
+                        if (multiLShape != null && multiLShape.PointCount != 1)
                         {
-                            addShape(fline);
-                            bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
+                            if (curentShapeType == ShapeType.Polygon || curentShapeType == ShapeType.FillPolygon)
+                                multiLShape.Type = curentShapeType;
+                            addShape(multiLShape);
                         }
-                        fline = null;
+                        multiLShape = null;
+                        bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
                         break;
 
                     case ShapeType.Circle:
@@ -158,11 +166,11 @@ namespace WinFormsApp2
                     case ShapeType.FillEllipse:
                     case ShapeType.Rectangle:
                     case ShapeType.FillRectangle:
-                        multiShape = null;
+                        multiRShape = null;
                         bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
                         break;
 
-                  
+
                     case ShapeType.Line:
                         line = null;
                         bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
@@ -181,9 +189,9 @@ namespace WinFormsApp2
                 switch (curentShapeType)
                 {
                     case ShapeType.FreeLine:
-                        if (mouseDragUpdeqtsCount % 5 == 0) fline?.AddPoint(new Point(e.X, e.Y));
+                        if (mouseDragUpdeqtsCount % 5 == 0) multiLShape?.AddPoint(new Point(e.X, e.Y));
                         bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
-                        fline?.Draw(gr);
+                        multiLShape?.Draw(gr);
                         break;
 
                 }
@@ -192,17 +200,18 @@ namespace WinFormsApp2
 
             switch (curentShapeType)
             {
-
+                case ShapeType.Polygon:
+                case ShapeType.FillPolygon:
                 case ShapeType.MultiLine:
-                    if (fline != null && fline.PointCount != 0)
+                    if (multiLShape != null && multiLShape.PointCount != 0)
                     {
 
                         if (mouseDragUpdeqtsCount % 5 == 0)
                         {
                             bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
-                            fline.Draw(gr);
+                            multiLShape.Draw(gr);
                             tmp = new(e.X, e.Y);
-                            gr.DrawLine(fline.Pen, fline.LastPoint, tmp);
+                            gr.DrawLine(multiLShape.Pen, multiLShape.LastPoint, tmp);
                         }
 
                     }
@@ -222,26 +231,25 @@ namespace WinFormsApp2
                 case ShapeType.FillRectangle:
                 case ShapeType.Ellipse:
                 case ShapeType.FillEllipse:
-                    if (multiShape != null)
+                    if (multiRShape != null)
                     {
-                        multiShape.Width = Math.Abs(tmp.X - e.X);
-                        multiShape.Height = Math.Abs(tmp.Y - e.Y);
+                        multiRShape.Width = Math.Abs(tmp.X - e.X);
+                        multiRShape.Height = Math.Abs(tmp.Y - e.Y);
                         Point normalize = new()
                         {
                             X = tmp.X < e.X ? tmp.X : e.X,
                             Y = tmp.Y < e.Y ? tmp.Y : e.Y,
                         };
-                        multiShape.Start = normalize;
+                        multiRShape.Start = normalize;
                         bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
-                        multiShape.Draw(gr);
+                        multiRShape.Draw(gr);
                     }
                     break;
 
-               
+
 
             }
         }
-
 
         private void pictureBox_MouseUp(object sender, MouseEventArgs e)
         {
@@ -250,9 +258,9 @@ namespace WinFormsApp2
                 switch (curentShapeType)
                 {
                     case ShapeType.FreeLine:
-                        fline.AddPoint(new Point(e.X, e.Y));
-                        addShape(fline);
-                        fline = null;
+                        multiLShape.AddPoint(new Point(e.X, e.Y));
+                        addShape(multiLShape);
+                        multiLShape = null;
                         break;
                 }
             }
@@ -275,8 +283,6 @@ namespace WinFormsApp2
             pen.Width = (float)sizeNumericUpDown.Value;
 
         }
-
-
 
         private void toolStripDropDownButton1_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
@@ -351,7 +357,17 @@ namespace WinFormsApp2
             undoPointer = shapes.Count - 1;
         }
 
+        private void Clear()
+        {
+            gr.Clear(curentBackColor);
+            shapes.Clear();
+            undoPointer = -1;
+            pictureBox.Image = bitmap;
+        }
 
-
+        private void eraseToolStripButton_Click(object sender, EventArgs e)
+        {
+            Clear();
+        }
     }
 }

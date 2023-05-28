@@ -63,6 +63,16 @@ namespace WinFormsApp2.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap clear256_24830 {
+            get {
+                object obj = ResourceManager.GetObject("clear256_24830", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap color_1222 {
             get {
                 object obj = ResourceManager.GetObject("color_1222", resourceCulture);

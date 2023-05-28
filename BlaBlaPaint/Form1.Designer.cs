@@ -54,6 +54,7 @@
             fileToolStripMenuItem = new ToolStripMenuItem();
             editToolStripMenuItem = new ToolStripMenuItem();
             toolImageList = new ImageList(components);
+            eraseToolStripButton = new ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             ((System.ComponentModel.ISupportInitialize)sizeNumericUpDown).BeginInit();
             toolStrip.SuspendLayout();
@@ -101,7 +102,7 @@
             // toolStrip
             // 
             toolStrip.ImageScalingSize = new Size(25, 25);
-            toolStrip.Items.AddRange(new ToolStripItem[] { newToolStripButton, fileOpenToolStripButton, saveToolStripButton, SaveAsToolStripButton, toolStripSeparator1, undoToolStripButton, redoToolStripButton, toolStripSeparator2, colorLabel, colorToolStripButton, toolStripSeparator4, fillToolStripButton, toolStripSeparator5, toolStripDropDownButton, toolStripLabel1, toolStripComboBox });
+            toolStrip.Items.AddRange(new ToolStripItem[] { newToolStripButton, fileOpenToolStripButton, saveToolStripButton, SaveAsToolStripButton, toolStripSeparator1, undoToolStripButton, redoToolStripButton, toolStripSeparator2, colorLabel, colorToolStripButton, toolStripSeparator4, fillToolStripButton, toolStripSeparator5, eraseToolStripButton, toolStripDropDownButton, toolStripLabel1, toolStripComboBox });
             toolStrip.Location = new Point(0, 24);
             toolStrip.Name = "toolStrip";
             toolStrip.Size = new Size(826, 32);
@@ -265,15 +266,28 @@
             toolImageList.ColorDepth = ColorDepth.Depth32Bit;
             toolImageList.ImageStream = (ImageListStreamer)resources.GetObject("toolImageList.ImageStream");
             toolImageList.TransparentColor = Color.Transparent;
-            toolImageList.Images.SetKeyName(0, "straightline_83780.png");
-            toolImageList.Images.SetKeyName(1, "curve_96294.png");
-            toolImageList.Images.SetKeyName(2, "chart_line_variant_icon_136800.png");
-            toolImageList.Images.SetKeyName(3, "rectangle_icon_144162.png");
-            toolImageList.Images.SetKeyName(4, "rectangle_icon_131506.png");
-            toolImageList.Images.SetKeyName(5, "circle_80174.png");
-            toolImageList.Images.SetKeyName(6, "circle_80914.png");
-            toolImageList.Images.SetKeyName(7, "ellipse_adobe_illustrator_tool_circle_icon_189052.png");
-            toolImageList.Images.SetKeyName(8, "ellipse_icon_138652.png");
+            toolImageList.Images.SetKeyName(0, "edit_clear_all_icon_181104.png");
+            toolImageList.Images.SetKeyName(1, "straightline_83780.png");
+            toolImageList.Images.SetKeyName(2, "curve_96294.png");
+            toolImageList.Images.SetKeyName(3, "chart_line_variant_icon_136800.png");
+            toolImageList.Images.SetKeyName(4, "rectangle_icon_144162.png");
+            toolImageList.Images.SetKeyName(5, "rectangle_icon_131506.png");
+            toolImageList.Images.SetKeyName(6, "circle_80174.png");
+            toolImageList.Images.SetKeyName(7, "circle_80914.png");
+            toolImageList.Images.SetKeyName(8, "ellipse_adobe_illustrator_tool_circle_icon_189052.png");
+            toolImageList.Images.SetKeyName(9, "ellipse_icon_138652.png");
+            toolImageList.Images.SetKeyName(10, "software-shape-polygon_97830.png");
+            toolImageList.Images.SetKeyName(11, "polygon_icon_215372.png");
+            // 
+            // eraseToolStripButton
+            // 
+            eraseToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            eraseToolStripButton.Image = Properties.Resources.clear256_24830;
+            eraseToolStripButton.ImageTransparentColor = Color.Magenta;
+            eraseToolStripButton.Name = "eraseToolStripButton";
+            eraseToolStripButton.Size = new Size(29, 29);
+            eraseToolStripButton.Text = "Clear All";
+            eraseToolStripButton.Click += eraseToolStripButton_Click;
             // 
             // Form1
             // 
@@ -327,5 +341,6 @@
         private ToolStripSeparator toolStripSeparator4;
         private ToolStripSeparator toolStripSeparator5;
         private ImageList toolImageList;
+        private ToolStripButton eraseToolStripButton;
     }
 }

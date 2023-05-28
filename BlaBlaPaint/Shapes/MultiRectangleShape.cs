@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace WinFormsApp2.Shapes
 {
-    internal class MultiShape : IDrawable
+    internal class MultiRectangleShape : IDrawable
     {
         private int height;
         private int width;
@@ -33,7 +33,7 @@ namespace WinFormsApp2.Shapes
             set => width = value;
         }
         public bool Filed { get; set; }
-        public MultiShape(Pen pen, ShapeType type)
+        public MultiRectangleShape(Pen pen, ShapeType type)
         {
             Height = 0;
             Width = 0;
