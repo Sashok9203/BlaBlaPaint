@@ -1,39 +1,68 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Windows.Forms;
 using WinFormsApp2.Properties;
 using WinFormsApp2.Shapes;
+using static WinFormsApp2.Form1;
 
 namespace WinFormsApp2
 {
+    public enum ShapeType
+    {
+        Line,
+        FreeLine,
+        MultiLine,
+        Rectangle,
+        FillRectangle,
+        Circle,
+        FillCircle,
+        Ellipse,
+        FillEllipse
+    }
 
     public partial class Form1 : Form
     {
-
-        public enum Shapes
+        public enum BitmapUpdate
         {
-            Line,
-            FreeLine,
-            Bezier,
-            Rectangle,
-            FillRectangle,
-            Circle,
-            FillCircle
+            Redraw,
+            NewBitmap
         }
+        public enum UpdateTime
+        {
+            Now,
+            Skip
+        }
+        
         private Graphics gr;
         private readonly Graphics clbg;
         private Bitmap bitmap;
         private Bitmap colorLabelbitmap;
         private Color curentColor, curentBackColor;
         private readonly Pen pen;
-        private bool mDown = false;
         private List<IDrawable> shapes;
-        private Shapes curentShape;
-        private Line line;
+        private ShapeType curentShapeType;
+        private Point tmp;
 
+        private Line? line = null;
+        private FreeLine? fline = null;
+        private MultiShape? multiShape = null;
+        
+
+        private int uPointer = -1, mouseDragUpdeqtsCount;
+        private int undoPointer
+        {
+            get => uPointer;
+            set
+            {
+                uPointer = value;
+                redoToolStripButton.Enabled = uPointer < shapes.Count - 1;
+                undoToolStripButton.Enabled = uPointer >= 0;
+            }
+        }
         public Form1()
         {
             InitializeComponent();
@@ -42,65 +71,191 @@ namespace WinFormsApp2
             pen = new(curentColor, 1);
             int index = 0;
             toolStripDropDownButton.Image = toolImageList.Images[index]; ;
-            foreach (string name in Enum.GetNames<Shapes>().ToArray())
+            foreach (string name in Enum.GetNames<ShapeType>().ToArray())
             {
                 toolStripDropDownButton.DropDownItems.Add(name);
                 toolStripDropDownButton.DropDownItems[index].DisplayStyle = ToolStripItemDisplayStyle.ImageAndText;
-                toolStripDropDownButton.DropDownItems[index].Tag = (Shapes)index;
+                toolStripDropDownButton.DropDownItems[index].Tag = (ShapeType)index;
                 toolStripDropDownButton.DropDownItems[index].Image = toolImageList.Images[index++];
             }
 
-            curentShape = Shapes.Line;
+            curentShapeType = ShapeType.Line;
             colorLabelbitmap = new Bitmap(5, 5);
             clbg = Graphics.FromImage(colorLabelbitmap);
             colorLabel.Image = colorLabelbitmap;
             curentBackColor = pictureBox.BackColor;
-
-            bitmapUpdate();
+            bitmap = new Bitmap(pictureBox.Width, pictureBox.Height);
+            gr = Graphics.FromImage(bitmap);
+            gr.Clear(curentBackColor);
+            reDraw();
+            pictureBox.Image = bitmap;
             labelColorChange();
 
         }
 
         private void pictureBox_MouseDown(object sender, MouseEventArgs e)
         {
-            switch (curentShape)
+            if (e.Button == MouseButtons.Left)
             {
-                case Shapes.Line: line = new(pen,new Point(e.X,e.Y), new Point(e.X, e.Y)); break;
+                switch (curentShapeType)
+                {
+                    case ShapeType.Line:
+                        if (line == null)  line = new(pen, new Point(e.X, e.Y), new Point(e.X, e.Y));
+                        else
+                        {
+                            line.End = tmp;
+                            line.Draw(gr);
+                            addShape(line);
+                            line = null;
+                        }
+                        break;
+
+                    case ShapeType.MultiLine:
+                    case ShapeType.FreeLine:
+                        fline ??= new(pen);
+                        fline.AddPoint(new Point(e.X, e.Y));
+                        fline.Free = curentShapeType == ShapeType.FreeLine;
+                        break;
+
+                    case ShapeType.Circle:
+                    case ShapeType.FillCircle:
+                    case ShapeType.Ellipse:
+                    case ShapeType.FillEllipse:
+                    case ShapeType.Rectangle:
+                    case ShapeType.FillRectangle:
+                        if (multiShape == null)
+                        {
+                            multiShape =  new(pen, curentShapeType);
+                            tmp = new Point(e.X, e.Y);
+                            multiShape.Filed = curentShapeType == ShapeType.FillRectangle;
+                        }
+                        else
+                        {
+                            addShape(multiShape);
+                            multiShape = null;
+                        }
+                        break;
+
+                   
+                }
             }
-           
-            mDown = true;
+            else if (e.Button == MouseButtons.Right)
+            {
+                switch (curentShapeType)
+                {
+                    case ShapeType.MultiLine:
+                        if (fline != null && fline.PointCount != 1)
+                        {
+                            addShape(fline);
+                            bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
+                        }
+                        fline = null;
+                        break;
+
+                    case ShapeType.Circle:
+                    case ShapeType.FillCircle:
+                    case ShapeType.Ellipse:
+                    case ShapeType.FillEllipse:
+                    case ShapeType.Rectangle:
+                    case ShapeType.FillRectangle:
+                        multiShape = null;
+                        bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
+                        break;
+
+                  
+                    case ShapeType.Line:
+                        line = null;
+                        bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
+                        break;
+
+                }
+            }
         }
 
         private void pictureBox_MouseMove(object sender, MouseEventArgs e)
         {
-
-            if (mDown)
+            mouseDragUpdeqtsCount++;
+            if (e.Button == MouseButtons.Left)
             {
-                bitmapUpdate(false);
-                switch (curentShape)
+
+                switch (curentShapeType)
                 {
-                    case Shapes.Line:
-                        line.End = new Point(e.X, e.Y);
-                        line.Draw(gr); 
+                    case ShapeType.FreeLine:
+                        if (mouseDragUpdeqtsCount % 5 == 0) fline?.AddPoint(new Point(e.X, e.Y));
+                        bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
+                        fline?.Draw(gr);
                         break;
+
                 }
+
+            }
+
+            switch (curentShapeType)
+            {
+
+                case ShapeType.MultiLine:
+                    if (fline != null && fline.PointCount != 0)
+                    {
+
+                        if (mouseDragUpdeqtsCount % 5 == 0)
+                        {
+                            bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
+                            fline.Draw(gr);
+                            tmp = new(e.X, e.Y);
+                            gr.DrawLine(fline.Pen, fline.LastPoint, tmp);
+                        }
+
+                    }
+                    break;
+                case ShapeType.Line:
+                    if (line != null)
+                    {
+                        tmp = new(e.X, e.Y);
+                        bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
+                        gr.DrawLine(line.Pen, line.Start, tmp);
+                    }
+                    break;
+
+                case ShapeType.Circle:
+                case ShapeType.FillCircle:
+                case ShapeType.Rectangle:
+                case ShapeType.FillRectangle:
+                case ShapeType.Ellipse:
+                case ShapeType.FillEllipse:
+                    if (multiShape != null)
+                    {
+                        multiShape.Width = Math.Abs(tmp.X - e.X);
+                        multiShape.Height = Math.Abs(tmp.Y - e.Y);
+                        Point normalize = new()
+                        {
+                            X = tmp.X < e.X ? tmp.X : e.X,
+                            Y = tmp.Y < e.Y ? tmp.Y : e.Y,
+                        };
+                        multiShape.Start = normalize;
+                        bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
+                        multiShape.Draw(gr);
+                    }
+                    break;
+
+               
 
             }
         }
 
 
-
         private void pictureBox_MouseUp(object sender, MouseEventArgs e)
         {
-            switch (curentShape)
+            if (e.Button == MouseButtons.Left)
             {
-                case Shapes.Line:
-                    line.End = new Point(e.X, e.Y);
-                    line.Draw(gr);
-                    shapes.Add(line);
-                    break;
+                switch (curentShapeType)
+                {
+                    case ShapeType.FreeLine:
+                        fline.AddPoint(new Point(e.X, e.Y));
+                        addShape(fline);
+                        fline = null;
+                        break;
+                }
             }
-            mDown = false;
         }
 
         private void colorButton_Click(object sender, EventArgs e)
@@ -126,7 +281,7 @@ namespace WinFormsApp2
         private void toolStripDropDownButton1_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             toolStripDropDownButton.Image = e.ClickedItem.Image;
-            curentShape = (Shapes)e.ClickedItem.Tag;
+            curentShapeType = (ShapeType)e.ClickedItem.Tag;
         }
 
         private void pictureBox_SizeChanged(object sender, EventArgs e)
@@ -145,7 +300,7 @@ namespace WinFormsApp2
             if (cd.ShowDialog() == DialogResult.OK && curentBackColor != cd.Color)
             {
                 curentBackColor = cd.Color;
-                bitmapUpdate(false);
+                bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
             }
         }
 
@@ -157,13 +312,15 @@ namespace WinFormsApp2
 
         private void reDraw()
         {
-            foreach (var item in shapes)
-                item.Draw(gr);
+            for (int i = 0; i <= undoPointer; i++)
+                shapes[i].Draw(gr);
         }
 
-        private void bitmapUpdate(bool newBitmap = true)
+        private void bitmapUpdate(BitmapUpdate update = BitmapUpdate.NewBitmap, UpdateTime upTime = UpdateTime.Now)
         {
-            if (newBitmap)
+            if (upTime != UpdateTime.Now && mouseDragUpdeqtsCount % 5 != 0) return;
+
+            if (update == BitmapUpdate.NewBitmap)
             {
                 bitmap = new Bitmap(pictureBox.Width, pictureBox.Height);
                 gr = Graphics.FromImage(bitmap);
@@ -171,6 +328,30 @@ namespace WinFormsApp2
             gr.Clear(curentBackColor);
             reDraw();
             pictureBox.Image = bitmap;
+
         }
+
+        private void undoToolStripButton_Click(object sender, EventArgs e)
+        {
+            undoPointer--;
+            bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
+        }
+
+        private void redoToolStripButton_Click(object sender, EventArgs e)
+        {
+            undoPointer++;
+            bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
+        }
+
+        private void addShape(IDrawable shape)
+        {
+            if (undoPointer != shapes.Count - 1)
+                shapes.RemoveRange(undoPointer + 1, shapes.Count - undoPointer - 1);
+            shapes.Add(shape);
+            undoPointer = shapes.Count - 1;
+        }
+
+
+
     }
 }

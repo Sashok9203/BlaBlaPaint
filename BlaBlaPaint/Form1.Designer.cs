@@ -154,21 +154,25 @@
             // 
             undoToolStripButton.AutoToolTip = false;
             undoToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            undoToolStripButton.Enabled = false;
             undoToolStripButton.Image = Properties.Resources.undoarrow_undo_1534;
             undoToolStripButton.ImageTransparentColor = Color.Magenta;
             undoToolStripButton.Name = "undoToolStripButton";
             undoToolStripButton.Size = new Size(29, 29);
             undoToolStripButton.Text = "Undo";
             undoToolStripButton.TextImageRelation = TextImageRelation.TextBeforeImage;
+            undoToolStripButton.Click += undoToolStripButton_Click;
             // 
             // redoToolStripButton
             // 
             redoToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            redoToolStripButton.Enabled = false;
             redoToolStripButton.Image = Properties.Resources.redoarrow_rehace_1547;
             redoToolStripButton.ImageTransparentColor = Color.Magenta;
             redoToolStripButton.Name = "redoToolStripButton";
             redoToolStripButton.Size = new Size(29, 29);
             redoToolStripButton.Text = "Redo";
+            redoToolStripButton.Click += redoToolStripButton_Click;
             // 
             // toolStripSeparator2
             // 
@@ -263,11 +267,13 @@
             toolImageList.TransparentColor = Color.Transparent;
             toolImageList.Images.SetKeyName(0, "straightline_83780.png");
             toolImageList.Images.SetKeyName(1, "curve_96294.png");
-            toolImageList.Images.SetKeyName(2, "vector_curve_icon_136065.png");
+            toolImageList.Images.SetKeyName(2, "chart_line_variant_icon_136800.png");
             toolImageList.Images.SetKeyName(3, "rectangle_icon_144162.png");
             toolImageList.Images.SetKeyName(4, "rectangle_icon_131506.png");
             toolImageList.Images.SetKeyName(5, "circle_80174.png");
             toolImageList.Images.SetKeyName(6, "circle_80914.png");
+            toolImageList.Images.SetKeyName(7, "ellipse_adobe_illustrator_tool_circle_icon_189052.png");
+            toolImageList.Images.SetKeyName(8, "ellipse_icon_138652.png");
             // 
             // Form1
             // 
