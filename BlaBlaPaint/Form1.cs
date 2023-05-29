@@ -1,10 +1,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Windows.Forms;
+
 using WinFormsApp2.Properties;
 using WinFormsApp2.Shapes;
 using static WinFormsApp2.Form1;
@@ -24,7 +21,8 @@ namespace WinFormsApp2
         Ellipse,
         FillEllipse,
         Polygon,
-        FillPolygon
+        FillPolygon,
+        Image
     }
 
     public partial class Form1 : Form
@@ -39,22 +37,23 @@ namespace WinFormsApp2
             Now,
             Skip
         }
-
+        private string? currentLoadedImagePath = null;
         private Graphics gr;
         private readonly Graphics clbg;
         private Bitmap bitmap;
         private Bitmap colorLabelbitmap;
-        private Color curentColor, curentBackColor;
+        private Image currentImage;
+        private Color currentColor, currentBackColor;
         private readonly Pen drawPen, erasePen;
         private List<IDrawable> shapes;
-        private ShapeType curentShapeType;
+        private ShapeType currentShapeType;
         private Point tmp;
 
         private Line? line = null;
         private Eraser? eraser = null;
         private MultiLineShape? multiLShape = null;
         private MultiRectangleShape? multiRShape = null;
-
+        private Picture? picture = null;
 
         private int uPointer = -1, mouseDragUpdeqtsCount;
         private int undoPointer
@@ -67,12 +66,23 @@ namespace WinFormsApp2
                 undoToolStripButton.Enabled = uPointer >= 0;
             }
         }
+        private bool saved ;
+        private bool Saved
+        {
+            get => saved;
+            set 
+            {
+                saved = value;
+                saveToolStripButton.Enabled = !saved;
+            }
+        }
         public Form1()
         {
             InitializeComponent();
+            currentImage = Resources.defaultImage;
             shapes = new();
-            curentColor = Color.Black;
-            drawPen = new(curentColor, 1);
+            currentColor = Color.Black;
+            drawPen = new(currentColor, 1);
             int index = 0;
             toolStripDropDownButton.Image = toolImageList.Images[1]; ;
             foreach (string name in Enum.GetNames<ShapeType>().ToArray())
@@ -83,24 +93,25 @@ namespace WinFormsApp2
                 toolStripDropDownButton.DropDownItems[index].Image = toolImageList.Images[index++];
             }
             for (int i = 1; i <= 100; i++) widhtComboBox.Items.Add(i);
-            curentShapeType = ShapeType.Line;
+            currentShapeType = ShapeType.Line;
             colorLabelbitmap = new Bitmap(5, 5);
             clbg = Graphics.FromImage(colorLabelbitmap);
             colorLabel.Image = colorLabelbitmap;
-            curentBackColor = Color.White;
-            erasePen = new Pen(curentBackColor, 1);
+            currentBackColor = Color.White;
+            erasePen = new Pen(currentBackColor, 1);
             bitmap = new Bitmap(pictureBox.Width, pictureBox.Height);
             gr = Graphics.FromImage(bitmap);
-            gr.Clear(curentBackColor);
+            gr.Clear(currentBackColor);
             pictureBox.Image = bitmap;
             labelColorChange();
+            Saved = true;
         }
 
         private void pictureBox_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
             {
-                switch (curentShapeType)
+                switch (currentShapeType)
                 {
                     case ShapeType.Line:
                         if (line == null) line = new(drawPen, new Point(e.X, e.Y), new Point(e.X, e.Y));
@@ -119,8 +130,8 @@ namespace WinFormsApp2
                     case ShapeType.FreeLine:
                         multiLShape ??= new(drawPen);
                         multiLShape.AddPoint(new Point(e.X, e.Y));
-                        multiLShape.Type = curentShapeType == ShapeType.Polygon || curentShapeType == ShapeType.FillPolygon ?
-                                     ShapeType.MultiLine : curentShapeType;
+                        multiLShape.Type = currentShapeType == ShapeType.Polygon || currentShapeType == ShapeType.FillPolygon ?
+                                     ShapeType.MultiLine : currentShapeType;
                         break;
 
                     case ShapeType.Circle:
@@ -131,14 +142,27 @@ namespace WinFormsApp2
                     case ShapeType.FillRectangle:
                         if (multiRShape == null)
                         {
-                            multiRShape = new(drawPen, curentShapeType);
+                            multiRShape = new(drawPen, currentShapeType);
                             tmp = new Point(e.X, e.Y);
-                            multiRShape.Filed = curentShapeType == ShapeType.FillRectangle;
+                            multiRShape.Filed = currentShapeType == ShapeType.FillRectangle;
                         }
                         else
                         {
                             addShape(multiRShape);
                             multiRShape = null;
+                        }
+                        break;
+
+                    case ShapeType.Image:
+                        if (picture == null)
+                        {
+                            picture = new(currentImage);
+                            tmp = new Point(e.X, e.Y);
+                        }
+                        else
+                        {
+                            addShape(picture);
+                            picture = null;
                         }
                         break;
 
@@ -152,15 +176,15 @@ namespace WinFormsApp2
             }
             else if (e.Button == MouseButtons.Right)
             {
-                switch (curentShapeType)
+                switch (currentShapeType)
                 {
                     case ShapeType.Polygon:
                     case ShapeType.FillPolygon:
                     case ShapeType.MultiLine:
                         if (multiLShape != null && multiLShape.PointCount != 1)
                         {
-                            if (curentShapeType == ShapeType.Polygon || curentShapeType == ShapeType.FillPolygon)
-                                multiLShape.Type = curentShapeType;
+                            if (currentShapeType == ShapeType.Polygon || currentShapeType == ShapeType.FillPolygon)
+                                multiLShape.Type = currentShapeType;
                             addShape(multiLShape);
                         }
                         multiLShape = null;
@@ -177,6 +201,10 @@ namespace WinFormsApp2
                         bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
                         break;
 
+                    case ShapeType.Image:
+                        picture = null;
+                        bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
+                        break;
 
                     case ShapeType.Line:
                         line = null;
@@ -193,15 +221,12 @@ namespace WinFormsApp2
             if (e.Button == MouseButtons.Left)
             {
 
-                switch (curentShapeType)
+                switch (currentShapeType)
                 {
                     case ShapeType.FreeLine:
-                        if (mouseDragUpdeqtsCount % 5 == 0)
-                        {
-                            multiLShape?.AddPoint(new Point(e.X, e.Y));
-                            multiLShape?.Draw(gr);
-                            pictureBox.Image = bitmap;
-                        }
+                        multiLShape?.AddPoint(new Point(e.X, e.Y));
+                        multiLShape?.Draw(gr);
+                        pictureBox.Image = bitmap;
                         break;
                     case ShapeType.Eraser:
                         eraser?.AddPoint(new Point(e.X, e.Y));
@@ -212,7 +237,7 @@ namespace WinFormsApp2
 
             }
 
-            switch (curentShapeType)
+            switch (currentShapeType)
             {
                 case ShapeType.Polygon:
                 case ShapeType.FillPolygon:
@@ -259,6 +284,21 @@ namespace WinFormsApp2
                         multiRShape.Draw(gr);
                     }
                     break;
+                case ShapeType.Image:
+                    if (picture != null)
+                    {
+                        picture.Size = new Size(Math.Abs(tmp.X - e.X), Math.Abs(tmp.Y - e.Y));
+                        Point normalize = new()
+                        {
+                            X = tmp.X < e.X ? tmp.X : e.X,
+                            Y = tmp.Y < e.Y ? tmp.Y : e.Y,
+                        };
+                        picture.StartPosition = normalize;
+                        bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
+                        picture.Draw(gr);
+                    }
+                    break;
+
             }
         }
 
@@ -266,7 +306,7 @@ namespace WinFormsApp2
         {
             if (e.Button == MouseButtons.Left)
             {
-                switch (curentShapeType)
+                switch (currentShapeType)
                 {
                     case ShapeType.FreeLine:
                         multiLShape?.AddPoint(new Point(e.X, e.Y));
@@ -289,12 +329,24 @@ namespace WinFormsApp2
 
         private void colorButton_Click(object sender, EventArgs e)
         {
-            ColorDialog cd = new();
-            if (cd.ShowDialog() == DialogResult.OK)
+            if (currentShapeType == ShapeType.Image)
             {
-                drawPen.Color = cd.Color;
-                curentColor = cd.Color;
-                labelColorChange();
+                Image? image = getImage().image;
+                if (image != null)
+                {
+                    currentImage = image;
+                    colorLabel.Image = currentImage;
+                }
+            }
+            else
+            {
+                ColorDialog cd = new();
+                if (cd.ShowDialog() == DialogResult.OK)
+                {
+                    drawPen.Color = cd.Color;
+                    currentColor = cd.Color;
+                    labelColorChange();
+                }
             }
         }
 
@@ -302,7 +354,9 @@ namespace WinFormsApp2
         private void toolStripDropDownButton1_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             toolStripDropDownButton.Image = e.ClickedItem.Image;
-            curentShapeType = (ShapeType)e.ClickedItem.Tag;
+            currentShapeType = (ShapeType)e.ClickedItem.Tag;
+            if (currentShapeType == ShapeType.Image) colorLabel.Image = currentImage;
+            else colorLabel.Image = colorLabelbitmap;
         }
 
         private void pictureBox_SizeChanged(object sender, EventArgs e)
@@ -312,23 +366,32 @@ namespace WinFormsApp2
 
         private void newToolStripButton_Click(object sender, EventArgs e)
         {
-
+            if (!Saved)
+            {
+                if (MessageBox.Show("Want to save this image?", "Save?", MessageBoxButtons.OKCancel) == DialogResult.OK)
+                {
+                   currentLoadedImagePath ??= getFileNameToImageSave();
+                   if (currentLoadedImagePath != null) saveImage(currentLoadedImagePath);
+                }
+            }
+            Clear();
+            currentLoadedImagePath = null;
         }
 
         private void fillToolStripButton_Click(object sender, EventArgs e)
         {
             ColorDialog cd = new();
-            if (cd.ShowDialog() == DialogResult.OK && curentBackColor != cd.Color)
+            if (cd.ShowDialog() == DialogResult.OK && currentBackColor != cd.Color)
             {
                 erasePen.Color = cd.Color;
-                curentBackColor = cd.Color;
+                currentBackColor = cd.Color;
                 bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
             }
         }
 
         private void labelColorChange()
         {
-            clbg.Clear(curentColor);
+            clbg.Clear(currentColor);
             colorLabel.Invalidate();
         }
 
@@ -347,7 +410,7 @@ namespace WinFormsApp2
                 bitmap = new Bitmap(pictureBox.Width, pictureBox.Height);
                 gr = Graphics.FromImage(bitmap);
             }
-            gr.Clear(curentBackColor);
+            gr.Clear(currentBackColor);
             reDraw();
             pictureBox.Image = bitmap;
 
@@ -371,11 +434,12 @@ namespace WinFormsApp2
                 shapes.RemoveRange(undoPointer + 1, shapes.Count - undoPointer - 1);
             shapes.Add(shape);
             undoPointer = shapes.Count - 1;
+            Saved = false;
         }
 
         private void Clear()
         {
-            gr.Clear(curentBackColor);
+            gr.Clear(currentBackColor);
             shapes.Clear();
             undoPointer = -1;
             pictureBox.Image = bitmap;
@@ -390,6 +454,84 @@ namespace WinFormsApp2
         {
             drawPen.Width = widhtComboBox.SelectedIndex;
             erasePen.Width = drawPen.Width;
+        }
+
+        private void fileOpenToolStripButton_Click(object sender, EventArgs e)
+        {
+            if (!saved) MessageBox.Show("save");
+            (Image?, string?) val = getImage();
+            if (val.Item1 != null)
+            {
+                Picture picture = new(new Bitmap (val.Item1))
+                {
+                    Size = pictureBox.Size,
+                    StartPosition = new()
+                };
+                addShape(picture);
+                picture.Draw(gr);
+                pictureBox.Image = bitmap;
+                currentLoadedImagePath = val.Item2;
+                val.Item1.Dispose();
+            }
+        }
+
+        private void saveToolStripButton_Click(object sender, EventArgs e)
+        {
+            currentLoadedImagePath ??= getFileNameToImageSave();
+            if (currentLoadedImagePath == null) return;
+            saveImage(currentLoadedImagePath);
+            Saved = true;
+        }
+
+        private void SaveAsToolStripButton_Click(object sender, EventArgs e)
+        {
+            string? path = getFileNameToImageSave();
+            if (path == null) return;
+            saveImage(path);
+            Saved = true;
+        }
+
+        private (Image? image,string? path) getImage()
+        {
+           
+            Image? image = null;
+            string? path = null;
+            OpenFileDialog fd = new();
+            fd.Filter = "JPG files(*.jpg)|*.jpg|JPEG files(*.jpeg)|*.jpeg|BMP files(*.bmp)|*.bmp|PNG files(*.png)|*.png";
+            if (fd.ShowDialog() == DialogResult.OK)
+            {
+                image = Image.FromFile(fd.FileName);
+                path = fd.FileName;
+            }
+            return (image,path);
+        }
+
+        private string? getFileNameToImageSave()
+        {
+
+            SaveFileDialog sfg = new SaveFileDialog();
+            sfg.Filter = "JPG files(*.jpg)|*.jpg|JPEG files(*.jpeg)|*.jpeg|BMP files(*.bmp)|*.bmp|PNG files(*.png)|*.png";
+            if (sfg.ShowDialog() == DialogResult.OK)
+                            return sfg.FileName;
+            return null;
+        }
+
+        private void saveImage(string path)
+        {
+            string exp = Path.GetExtension(path)[1..].ToLower();
+            switch (exp)
+            {
+                case "jpeg":
+                case "jpg":
+                    bitmap.Save(path, ImageFormat.Jpeg);
+                    break;
+                case "png":
+                    bitmap.Save(path, ImageFormat.Png);
+                    break;
+                case "bmp":
+                    bitmap.Save(path, ImageFormat.Bmp);
+                    break;
+            }
         }
     }
 }

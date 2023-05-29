@@ -42,20 +42,16 @@
             toolStripSeparator2 = new ToolStripSeparator();
             colorLabel = new ToolStripLabel();
             colorToolStripButton = new ToolStripButton();
+            toolStripDropDownButton = new ToolStripDropDownButton();
+            toolStripLabel1 = new ToolStripLabel();
+            widhtComboBox = new ToolStripComboBox();
             toolStripSeparator4 = new ToolStripSeparator();
             fillToolStripButton = new ToolStripButton();
             toolStripSeparator5 = new ToolStripSeparator();
             eraseToolStripButton = new ToolStripButton();
-            toolStripDropDownButton = new ToolStripDropDownButton();
-            toolStripLabel1 = new ToolStripLabel();
-            widhtComboBox = new ToolStripComboBox();
-            menuStrip1 = new MenuStrip();
-            fileToolStripMenuItem = new ToolStripMenuItem();
-            editToolStripMenuItem = new ToolStripMenuItem();
             toolImageList = new ImageList(components);
             ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             toolStrip.SuspendLayout();
-            menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // pictureBox
@@ -64,7 +60,7 @@
             pictureBox.BackColor = Color.Gainsboro;
             pictureBox.Location = new Point(12, 59);
             pictureBox.Name = "pictureBox";
-            pictureBox.Size = new Size(802, 535);
+            pictureBox.Size = new Size(802, 521);
             pictureBox.TabIndex = 0;
             pictureBox.TabStop = false;
             pictureBox.SizeChanged += pictureBox_SizeChanged;
@@ -76,7 +72,7 @@
             // 
             toolStrip.ImageScalingSize = new Size(25, 25);
             toolStrip.Items.AddRange(new ToolStripItem[] { newToolStripButton, fileOpenToolStripButton, saveToolStripButton, SaveAsToolStripButton, toolStripSeparator1, undoToolStripButton, redoToolStripButton, toolStripSeparator2, colorLabel, colorToolStripButton, toolStripDropDownButton, toolStripLabel1, widhtComboBox, toolStripSeparator4, fillToolStripButton, toolStripSeparator5, eraseToolStripButton });
-            toolStrip.Location = new Point(0, 24);
+            toolStrip.Location = new Point(0, 0);
             toolStrip.Name = "toolStrip";
             toolStrip.Size = new Size(826, 32);
             toolStrip.TabIndex = 4;
@@ -100,6 +96,7 @@
             fileOpenToolStripButton.Name = "fileOpenToolStripButton";
             fileOpenToolStripButton.Size = new Size(29, 29);
             fileOpenToolStripButton.Text = "Open File";
+            fileOpenToolStripButton.Click += fileOpenToolStripButton_Click;
             // 
             // saveToolStripButton
             // 
@@ -109,6 +106,7 @@
             saveToolStripButton.Name = "saveToolStripButton";
             saveToolStripButton.Size = new Size(29, 29);
             saveToolStripButton.Text = "Save";
+            saveToolStripButton.Click += saveToolStripButton_Click;
             // 
             // SaveAsToolStripButton
             // 
@@ -118,6 +116,7 @@
             SaveAsToolStripButton.Name = "SaveAsToolStripButton";
             SaveAsToolStripButton.Size = new Size(29, 29);
             SaveAsToolStripButton.Text = "Save As";
+            SaveAsToolStripButton.Click += SaveAsToolStripButton_Click;
             // 
             // toolStripSeparator1
             // 
@@ -170,6 +169,30 @@
             colorToolStripButton.Text = "Color";
             colorToolStripButton.Click += colorButton_Click;
             // 
+            // toolStripDropDownButton
+            // 
+            toolStripDropDownButton.ForeColor = Color.Black;
+            toolStripDropDownButton.ImageTransparentColor = Color.Magenta;
+            toolStripDropDownButton.Name = "toolStripDropDownButton";
+            toolStripDropDownButton.Size = new Size(42, 29);
+            toolStripDropDownButton.Text = "Tool";
+            toolStripDropDownButton.DropDownItemClicked += toolStripDropDownButton1_DropDownItemClicked;
+            // 
+            // toolStripLabel1
+            // 
+            toolStripLabel1.ForeColor = Color.Black;
+            toolStripLabel1.Name = "toolStripLabel1";
+            toolStripLabel1.Size = new Size(57, 29);
+            toolStripLabel1.Text = "  Tool size";
+            // 
+            // widhtComboBox
+            // 
+            widhtComboBox.FlatStyle = FlatStyle.Standard;
+            widhtComboBox.Name = "widhtComboBox";
+            widhtComboBox.Size = new Size(75, 32);
+            widhtComboBox.Text = "1";
+            widhtComboBox.SelectedIndexChanged += widhtComboBox_SelectedIndexChanged;
+            // 
             // toolStripSeparator4
             // 
             toolStripSeparator4.Name = "toolStripSeparator4";
@@ -200,51 +223,6 @@
             eraseToolStripButton.Text = "Clear All";
             eraseToolStripButton.Click += eraseToolStripButton_Click;
             // 
-            // toolStripDropDownButton
-            // 
-            toolStripDropDownButton.ForeColor = Color.Black;
-            toolStripDropDownButton.ImageTransparentColor = Color.Magenta;
-            toolStripDropDownButton.Name = "toolStripDropDownButton";
-            toolStripDropDownButton.Size = new Size(42, 29);
-            toolStripDropDownButton.Text = "Tool";
-            toolStripDropDownButton.DropDownItemClicked += toolStripDropDownButton1_DropDownItemClicked;
-            // 
-            // toolStripLabel1
-            // 
-            toolStripLabel1.ForeColor = Color.Black;
-            toolStripLabel1.Name = "toolStripLabel1";
-            toolStripLabel1.Size = new Size(57, 29);
-            toolStripLabel1.Text = "  Tool size";
-            // 
-            // widhtComboBox
-            // 
-            widhtComboBox.FlatStyle = FlatStyle.Standard;
-            widhtComboBox.Name = "widhtComboBox";
-            widhtComboBox.Size = new Size(75, 32);
-            widhtComboBox.Text = "1";
-            widhtComboBox.SelectedIndexChanged += widhtComboBox_SelectedIndexChanged;
-            // 
-            // menuStrip1
-            // 
-            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem, editToolStripMenuItem });
-            menuStrip1.Location = new Point(0, 0);
-            menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(826, 24);
-            menuStrip1.TabIndex = 5;
-            menuStrip1.Text = "menuStrip1";
-            // 
-            // fileToolStripMenuItem
-            // 
-            fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            fileToolStripMenuItem.Size = new Size(37, 20);
-            fileToolStripMenuItem.Text = "File";
-            // 
-            // editToolStripMenuItem
-            // 
-            editToolStripMenuItem.Name = "editToolStripMenuItem";
-            editToolStripMenuItem.Size = new Size(39, 20);
-            editToolStripMenuItem.Text = "Edit";
-            // 
             // toolImageList
             // 
             toolImageList.ColorDepth = ColorDepth.Depth32Bit;
@@ -262,6 +240,7 @@
             toolImageList.Images.SetKeyName(9, "ellipse_icon_138652.png");
             toolImageList.Images.SetKeyName(10, "software-shape-polygon_97830.png");
             toolImageList.Images.SetKeyName(11, "polygon_icon_215372.png");
+            toolImageList.Images.SetKeyName(12, "frame_gallery_image_images_photo_picture_pictures_icon_123209.png");
             // 
             // Form1
             // 
@@ -270,18 +249,14 @@
             BackColor = SystemColors.Control;
             ClientSize = new Size(826, 675);
             Controls.Add(toolStrip);
-            Controls.Add(menuStrip1);
             Controls.Add(pictureBox);
             ForeColor = Color.White;
-            MainMenuStrip = menuStrip1;
             MinimumSize = new Size(300, 300);
             Name = "Form1";
             Text = "BlaBlaPaint";
             ((System.ComponentModel.ISupportInitialize)pictureBox).EndInit();
             toolStrip.ResumeLayout(false);
             toolStrip.PerformLayout();
-            menuStrip1.ResumeLayout(false);
-            menuStrip1.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
@@ -290,10 +265,7 @@
 
         private PictureBox pictureBox;
         private ToolStrip toolStrip;
-        private MenuStrip menuStrip1;
-        private ToolStripMenuItem fileToolStripMenuItem;
         private ToolStripButton newToolStripButton;
-        private ToolStripMenuItem editToolStripMenuItem;
         private ToolStripButton undoToolStripButton;
         private ToolStripButton redoToolStripButton;
         private ToolStripButton fileOpenToolStripButton;

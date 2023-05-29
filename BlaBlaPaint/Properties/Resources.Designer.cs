@@ -83,6 +83,16 @@ namespace WinFormsApp2.Properties {
         /// <summary>
         ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap defaultImage {
+            get {
+                object obj = ResourceManager.GetObject("defaultImage", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Поиск локализованного ресурса типа System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap diskette_save_saveas_1514 {
             get {
                 object obj = ResourceManager.GetObject("diskette_save_saveas_1514", resourceCulture);
