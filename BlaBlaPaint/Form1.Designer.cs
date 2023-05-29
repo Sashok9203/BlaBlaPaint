@@ -60,7 +60,7 @@
             pictureBox.BackColor = Color.Gainsboro;
             pictureBox.Location = new Point(12, 59);
             pictureBox.Name = "pictureBox";
-            pictureBox.Size = new Size(802, 521);
+            pictureBox.Size = new Size(960, 590);
             pictureBox.TabIndex = 0;
             pictureBox.TabStop = false;
             pictureBox.SizeChanged += pictureBox_SizeChanged;
@@ -74,7 +74,7 @@
             toolStrip.Items.AddRange(new ToolStripItem[] { newToolStripButton, fileOpenToolStripButton, saveToolStripButton, SaveAsToolStripButton, toolStripSeparator1, undoToolStripButton, redoToolStripButton, toolStripSeparator2, colorLabel, colorToolStripButton, toolStripDropDownButton, toolStripLabel1, widhtComboBox, toolStripSeparator4, fillToolStripButton, toolStripSeparator5, eraseToolStripButton });
             toolStrip.Location = new Point(0, 0);
             toolStrip.Name = "toolStrip";
-            toolStrip.Size = new Size(826, 32);
+            toolStrip.Size = new Size(984, 32);
             toolStrip.TabIndex = 4;
             toolStrip.Text = "toolStrip1";
             // 
@@ -176,7 +176,7 @@
             toolStripDropDownButton.Name = "toolStripDropDownButton";
             toolStripDropDownButton.Size = new Size(42, 29);
             toolStripDropDownButton.Text = "Tool";
-            toolStripDropDownButton.DropDownItemClicked += toolStripDropDownButton1_DropDownItemClicked;
+            toolStripDropDownButton.DropDownItemClicked += toolStripDropDownButtonClicked;
             // 
             // toolStripLabel1
             // 
@@ -247,7 +247,7 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             BackColor = SystemColors.Control;
-            ClientSize = new Size(826, 675);
+            ClientSize = new Size(984, 661);
             Controls.Add(toolStrip);
             Controls.Add(pictureBox);
             ForeColor = Color.White;

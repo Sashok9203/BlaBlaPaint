@@ -38,11 +38,11 @@ namespace WinFormsApp2
             Skip
         }
         private string? currentLoadedImagePath = null;
-        private Graphics gr;
-        private readonly Graphics clbg;
+        private Graphics currentGraphics;
+        private readonly Graphics colorLableGraphics;
         private Bitmap bitmap;
         private Bitmap colorLabelbitmap;
-        private Image currentImage;
+        private Image currentImageTool;
         private Color currentColor, currentBackColor;
         private readonly Pen drawPen, erasePen;
         private List<IDrawable> shapes;
@@ -66,20 +66,21 @@ namespace WinFormsApp2
                 undoToolStripButton.Enabled = uPointer >= 0;
             }
         }
-        private bool saved ;
+        private bool saved;
         private bool Saved
         {
             get => saved;
-            set 
+            set
             {
                 saved = value;
                 saveToolStripButton.Enabled = !saved;
             }
         }
+
         public Form1()
         {
             InitializeComponent();
-            currentImage = Resources.defaultImage;
+            currentImageTool = Resources.defaultImage;
             shapes = new();
             currentColor = Color.Black;
             drawPen = new(currentColor, 1);
@@ -95,13 +96,13 @@ namespace WinFormsApp2
             for (int i = 1; i <= 100; i++) widhtComboBox.Items.Add(i);
             currentShapeType = ShapeType.Line;
             colorLabelbitmap = new Bitmap(5, 5);
-            clbg = Graphics.FromImage(colorLabelbitmap);
+            colorLableGraphics = Graphics.FromImage(colorLabelbitmap);
             colorLabel.Image = colorLabelbitmap;
             currentBackColor = Color.White;
             erasePen = new Pen(currentBackColor, 1);
             bitmap = new Bitmap(pictureBox.Width, pictureBox.Height);
-            gr = Graphics.FromImage(bitmap);
-            gr.Clear(currentBackColor);
+            currentGraphics = Graphics.FromImage(bitmap);
+            currentGraphics.Clear(currentBackColor);
             pictureBox.Image = bitmap;
             labelColorChange();
             Saved = true;
@@ -118,7 +119,7 @@ namespace WinFormsApp2
                         else
                         {
                             line.End = tmp;
-                            line.Draw(gr);
+                            line.Draw(currentGraphics);
                             addShape(line);
                             line = null;
                         }
@@ -156,7 +157,7 @@ namespace WinFormsApp2
                     case ShapeType.Image:
                         if (picture == null)
                         {
-                            picture = new(currentImage);
+                            picture = new(currentImageTool);
                             tmp = new Point(e.X, e.Y);
                         }
                         else
@@ -169,9 +170,7 @@ namespace WinFormsApp2
                     case ShapeType.Eraser:
                         eraser ??= new(erasePen);
                         eraser.AddPoint(new Point(e.X, e.Y));
-
                         break;
-
                 }
             }
             else if (e.Button == MouseButtons.Right)
@@ -210,7 +209,6 @@ namespace WinFormsApp2
                         line = null;
                         bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
                         break;
-
                 }
             }
         }
@@ -220,21 +218,19 @@ namespace WinFormsApp2
             mouseDragUpdeqtsCount++;
             if (e.Button == MouseButtons.Left)
             {
-
                 switch (currentShapeType)
                 {
                     case ShapeType.FreeLine:
                         multiLShape?.AddPoint(new Point(e.X, e.Y));
-                        multiLShape?.Draw(gr);
+                        multiLShape?.Draw(currentGraphics);
                         pictureBox.Image = bitmap;
                         break;
                     case ShapeType.Eraser:
                         eraser?.AddPoint(new Point(e.X, e.Y));
-                        eraser?.Draw(gr);
+                        eraser?.Draw(currentGraphics);
                         pictureBox.Image = bitmap;
                         break;
                 }
-
             }
 
             switch (currentShapeType)
@@ -244,23 +240,22 @@ namespace WinFormsApp2
                 case ShapeType.MultiLine:
                     if (multiLShape != null && multiLShape.PointCount != 0)
                     {
-
                         if (mouseDragUpdeqtsCount % 5 == 0)
                         {
-                            bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
-                            multiLShape.Draw(gr);
+                            bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
+                            multiLShape.Draw(currentGraphics);
                             tmp = new(e.X, e.Y);
-                            gr.DrawLine(multiLShape.Pen, multiLShape.LastPoint, tmp);
+                            currentGraphics.DrawLine(multiLShape.Pen, multiLShape.LastPoint, tmp);
                         }
-
                     }
                     break;
+
                 case ShapeType.Line:
                     if (line != null)
                     {
                         tmp = new(e.X, e.Y);
                         bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
-                        gr.DrawLine(line.Pen, line.Start, tmp);
+                        currentGraphics.DrawLine(line.Pen, line.Start, tmp);
                     }
                     break;
 
@@ -281,7 +276,7 @@ namespace WinFormsApp2
                         };
                         multiRShape.Start = normalize;
                         bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
-                        multiRShape.Draw(gr);
+                        multiRShape.Draw(currentGraphics);
                     }
                     break;
                 case ShapeType.Image:
@@ -295,7 +290,7 @@ namespace WinFormsApp2
                         };
                         picture.StartPosition = normalize;
                         bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
-                        picture.Draw(gr);
+                        picture.Draw(currentGraphics);
                     }
                     break;
 
@@ -311,14 +306,14 @@ namespace WinFormsApp2
                     case ShapeType.FreeLine:
                         multiLShape?.AddPoint(new Point(e.X, e.Y));
                         addShape(multiLShape);
-                        multiLShape.Draw(gr);
+                        multiLShape.Draw(currentGraphics);
                         pictureBox.Image = bitmap;
                         multiLShape = null;
                         break;
                     case ShapeType.Eraser:
                         eraser?.AddPoint(new Point(e.X, e.Y));
                         addShape(eraser);
-                        eraser.Draw(gr);
+                        eraser.Draw(currentGraphics);
                         pictureBox.Image = bitmap;
                         eraser = null;
                         break;
@@ -334,8 +329,8 @@ namespace WinFormsApp2
                 Image? image = getImage().image;
                 if (image != null)
                 {
-                    currentImage = image;
-                    colorLabel.Image = currentImage;
+                    currentImageTool = image;
+                    colorLabel.Image = currentImageTool;
                 }
             }
             else
@@ -350,12 +345,11 @@ namespace WinFormsApp2
             }
         }
 
-
-        private void toolStripDropDownButton1_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        private void toolStripDropDownButtonClicked(object sender, ToolStripItemClickedEventArgs e)
         {
             toolStripDropDownButton.Image = e.ClickedItem.Image;
             currentShapeType = (ShapeType)e.ClickedItem.Tag;
-            if (currentShapeType == ShapeType.Image) colorLabel.Image = currentImage;
+            if (currentShapeType == ShapeType.Image) colorLabel.Image = currentImageTool;
             else colorLabel.Image = colorLabelbitmap;
         }
 
@@ -370,8 +364,8 @@ namespace WinFormsApp2
             {
                 if (MessageBox.Show("Want to save this image?", "Save?", MessageBoxButtons.OKCancel) == DialogResult.OK)
                 {
-                   currentLoadedImagePath ??= getFileNameToImageSave();
-                   if (currentLoadedImagePath != null) saveImage(currentLoadedImagePath);
+                    currentLoadedImagePath ??= getFileNameToImageSave();
+                    if (currentLoadedImagePath != null) saveImage(currentLoadedImagePath);
                 }
             }
             Clear();
@@ -391,14 +385,14 @@ namespace WinFormsApp2
 
         private void labelColorChange()
         {
-            clbg.Clear(currentColor);
+            colorLableGraphics.Clear(currentColor);
             colorLabel.Invalidate();
         }
 
         private void reDraw()
         {
             for (int i = 0; i <= undoPointer; i++)
-                shapes[i].Draw(gr);
+                shapes[i].Draw(currentGraphics);
         }
 
         private void bitmapUpdate(BitmapUpdate update = BitmapUpdate.NewBitmap, UpdateTime upTime = UpdateTime.Now)
@@ -408,9 +402,9 @@ namespace WinFormsApp2
             if (update == BitmapUpdate.NewBitmap)
             {
                 bitmap = new Bitmap(pictureBox.Width, pictureBox.Height);
-                gr = Graphics.FromImage(bitmap);
+                currentGraphics = Graphics.FromImage(bitmap);
             }
-            gr.Clear(currentBackColor);
+            currentGraphics.Clear(currentBackColor);
             reDraw();
             pictureBox.Image = bitmap;
 
@@ -439,7 +433,7 @@ namespace WinFormsApp2
 
         private void Clear()
         {
-            gr.Clear(currentBackColor);
+            currentGraphics.Clear(currentBackColor);
             shapes.Clear();
             undoPointer = -1;
             pictureBox.Image = bitmap;
@@ -462,13 +456,13 @@ namespace WinFormsApp2
             (Image?, string?) val = getImage();
             if (val.Item1 != null)
             {
-                Picture picture = new(new Bitmap (val.Item1))
+                Picture picture = new(new Bitmap(val.Item1))
                 {
                     Size = pictureBox.Size,
                     StartPosition = new()
                 };
                 addShape(picture);
-                picture.Draw(gr);
+                picture.Draw(currentGraphics);
                 pictureBox.Image = bitmap;
                 currentLoadedImagePath = val.Item2;
                 val.Item1.Dispose();
@@ -491,9 +485,9 @@ namespace WinFormsApp2
             Saved = true;
         }
 
-        private (Image? image,string? path) getImage()
+        private (Image? image, string? path) getImage()
         {
-           
+
             Image? image = null;
             string? path = null;
             OpenFileDialog fd = new();
@@ -503,7 +497,7 @@ namespace WinFormsApp2
                 image = Image.FromFile(fd.FileName);
                 path = fd.FileName;
             }
-            return (image,path);
+            return (image, path);
         }
 
         private string? getFileNameToImageSave()
@@ -512,7 +506,7 @@ namespace WinFormsApp2
             SaveFileDialog sfg = new SaveFileDialog();
             sfg.Filter = "JPG files(*.jpg)|*.jpg|JPEG files(*.jpeg)|*.jpeg|BMP files(*.bmp)|*.bmp|PNG files(*.png)|*.png";
             if (sfg.ShowDialog() == DialogResult.OK)
-                            return sfg.FileName;
+                return sfg.FileName;
             return null;
         }
 
