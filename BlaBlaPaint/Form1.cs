@@ -450,7 +450,14 @@ namespace WinFormsApp2
 
         private void fileOpenToolStripButton_Click(object sender, EventArgs e)
         {
-            if (!saved) MessageBox.Show("save");
+            if (!Saved)
+            {
+                if (MessageBox.Show("Want to save this image?", "Save?", MessageBoxButtons.OKCancel) == DialogResult.OK)
+                {
+                    currentLoadedImagePath ??= getFileNameToImageSave();
+                    if (currentLoadedImagePath != null) saveImage(currentLoadedImagePath);
+                }
+            }
             (Image?, string?) val = getImage();
             if (val.Item1 != null)
             {
