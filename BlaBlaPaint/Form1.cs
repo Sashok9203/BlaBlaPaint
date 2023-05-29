@@ -37,6 +37,7 @@ namespace WinFormsApp2
             Now,
             Skip
         }
+
         private string? currentLoadedImagePath = null;
         private Graphics currentGraphics;
         private readonly Graphics colorLableGraphics;
@@ -55,7 +56,7 @@ namespace WinFormsApp2
         private MultiRectangleShape? multiRShape = null;
         private Picture? picture = null;
 
-        private int uPointer = -1, mouseDragUpdeqtsCount;
+        private int uPointer = -1, mouseDragUpdeqtsCount,updateSkip = 5;
         private int undoPointer
         {
             get => uPointer;
@@ -397,7 +398,7 @@ namespace WinFormsApp2
 
         private void bitmapUpdate(BitmapUpdate update = BitmapUpdate.NewBitmap, UpdateTime upTime = UpdateTime.Now)
         {
-            if (upTime != UpdateTime.Now && mouseDragUpdeqtsCount % 5 != 0) return;
+            if (upTime != UpdateTime.Now && mouseDragUpdeqtsCount % updateSkip != 0) return;
 
             if (update == BitmapUpdate.NewBitmap)
             {
@@ -439,11 +440,8 @@ namespace WinFormsApp2
             pictureBox.Image = bitmap;
         }
 
-        private void eraseToolStripButton_Click(object sender, EventArgs e)
-        {
-            Clear();
-        }
-
+        private void eraseToolStripButton_Click(object sender, EventArgs e) => Clear();
+        
         private void widhtComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             drawPen.Width = widhtComboBox.SelectedIndex;
