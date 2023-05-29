@@ -45,12 +45,13 @@ namespace WinFormsApp2
         private Bitmap bitmap;
         private Bitmap colorLabelbitmap;
         private Color curentColor, curentBackColor;
-        private readonly Pen pen;
+        private readonly Pen drawPen, erasePen;
         private List<IDrawable> shapes;
         private ShapeType curentShapeType;
         private Point tmp;
 
         private Line? line = null;
+        private Eraser? eraser = null;
         private MultiLineShape? multiLShape = null;
         private MultiRectangleShape? multiRShape = null;
 
@@ -71,7 +72,7 @@ namespace WinFormsApp2
             InitializeComponent();
             shapes = new();
             curentColor = Color.Black;
-            pen = new(curentColor, 1);
+            drawPen = new(curentColor, 1);
             int index = 0;
             toolStripDropDownButton.Image = toolImageList.Images[1]; ;
             foreach (string name in Enum.GetNames<ShapeType>().ToArray())
@@ -81,12 +82,13 @@ namespace WinFormsApp2
                 toolStripDropDownButton.DropDownItems[index].Tag = (ShapeType)index;
                 toolStripDropDownButton.DropDownItems[index].Image = toolImageList.Images[index++];
             }
-
+            for (int i = 1; i <= 100; i++) widhtComboBox.Items.Add(i);
             curentShapeType = ShapeType.Line;
             colorLabelbitmap = new Bitmap(5, 5);
             clbg = Graphics.FromImage(colorLabelbitmap);
             colorLabel.Image = colorLabelbitmap;
             curentBackColor = Color.White;
+            erasePen = new Pen(curentBackColor, 1);
             bitmap = new Bitmap(pictureBox.Width, pictureBox.Height);
             gr = Graphics.FromImage(bitmap);
             gr.Clear(curentBackColor);
@@ -101,7 +103,7 @@ namespace WinFormsApp2
                 switch (curentShapeType)
                 {
                     case ShapeType.Line:
-                        if (line == null) line = new(pen, new Point(e.X, e.Y), new Point(e.X, e.Y));
+                        if (line == null) line = new(drawPen, new Point(e.X, e.Y), new Point(e.X, e.Y));
                         else
                         {
                             line.End = tmp;
@@ -115,7 +117,7 @@ namespace WinFormsApp2
                     case ShapeType.FillPolygon:
                     case ShapeType.MultiLine:
                     case ShapeType.FreeLine:
-                        multiLShape ??= new(pen);
+                        multiLShape ??= new(drawPen);
                         multiLShape.AddPoint(new Point(e.X, e.Y));
                         multiLShape.Type = curentShapeType == ShapeType.Polygon || curentShapeType == ShapeType.FillPolygon ?
                                      ShapeType.MultiLine : curentShapeType;
@@ -129,7 +131,7 @@ namespace WinFormsApp2
                     case ShapeType.FillRectangle:
                         if (multiRShape == null)
                         {
-                            multiRShape = new(pen, curentShapeType);
+                            multiRShape = new(drawPen, curentShapeType);
                             tmp = new Point(e.X, e.Y);
                             multiRShape.Filed = curentShapeType == ShapeType.FillRectangle;
                         }
@@ -140,6 +142,11 @@ namespace WinFormsApp2
                         }
                         break;
 
+                    case ShapeType.Eraser:
+                        eraser ??= new(erasePen);
+                        eraser.AddPoint(new Point(e.X, e.Y));
+
+                        break;
 
                 }
             }
@@ -189,11 +196,18 @@ namespace WinFormsApp2
                 switch (curentShapeType)
                 {
                     case ShapeType.FreeLine:
-                        if (mouseDragUpdeqtsCount % 5 == 0) multiLShape?.AddPoint(new Point(e.X, e.Y));
-                        bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Skip);
-                        multiLShape?.Draw(gr);
+                        if (mouseDragUpdeqtsCount % 5 == 0)
+                        {
+                            multiLShape?.AddPoint(new Point(e.X, e.Y));
+                            multiLShape?.Draw(gr);
+                            pictureBox.Image = bitmap;
+                        }
                         break;
-
+                    case ShapeType.Eraser:
+                        eraser?.AddPoint(new Point(e.X, e.Y));
+                        eraser?.Draw(gr);
+                        pictureBox.Image = bitmap;
+                        break;
                 }
 
             }
@@ -245,9 +259,6 @@ namespace WinFormsApp2
                         multiRShape.Draw(gr);
                     }
                     break;
-
-
-
             }
         }
 
@@ -258,10 +269,20 @@ namespace WinFormsApp2
                 switch (curentShapeType)
                 {
                     case ShapeType.FreeLine:
-                        multiLShape.AddPoint(new Point(e.X, e.Y));
+                        multiLShape?.AddPoint(new Point(e.X, e.Y));
                         addShape(multiLShape);
+                        multiLShape.Draw(gr);
+                        pictureBox.Image = bitmap;
                         multiLShape = null;
                         break;
+                    case ShapeType.Eraser:
+                        eraser?.AddPoint(new Point(e.X, e.Y));
+                        addShape(eraser);
+                        eraser.Draw(gr);
+                        pictureBox.Image = bitmap;
+                        eraser = null;
+                        break;
+
                 }
             }
         }
@@ -271,18 +292,12 @@ namespace WinFormsApp2
             ColorDialog cd = new();
             if (cd.ShowDialog() == DialogResult.OK)
             {
-                pen.Color = cd.Color;
+                drawPen.Color = cd.Color;
                 curentColor = cd.Color;
                 labelColorChange();
             }
         }
 
-        private void sizeNumericUpDown_ValueChanged(object sender, EventArgs e)
-        {
-
-            pen.Width = (float)sizeNumericUpDown.Value;
-
-        }
 
         private void toolStripDropDownButton1_DropDownItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
@@ -305,6 +320,7 @@ namespace WinFormsApp2
             ColorDialog cd = new();
             if (cd.ShowDialog() == DialogResult.OK && curentBackColor != cd.Color)
             {
+                erasePen.Color = cd.Color;
                 curentBackColor = cd.Color;
                 bitmapUpdate(BitmapUpdate.Redraw, UpdateTime.Now);
             }
@@ -368,6 +384,12 @@ namespace WinFormsApp2
         private void eraseToolStripButton_Click(object sender, EventArgs e)
         {
             Clear();
+        }
+
+        private void widhtComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            drawPen.Width = widhtComboBox.SelectedIndex;
+            erasePen.Width = drawPen.Width;
         }
     }
 }

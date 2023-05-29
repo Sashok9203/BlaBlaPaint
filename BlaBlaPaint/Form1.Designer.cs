@@ -31,8 +31,6 @@
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             pictureBox = new PictureBox();
-            sizeNumericUpDown = new NumericUpDown();
-            label1 = new Label();
             toolStrip = new ToolStrip();
             newToolStripButton = new ToolStripButton();
             fileOpenToolStripButton = new ToolStripButton();
@@ -47,16 +45,15 @@
             toolStripSeparator4 = new ToolStripSeparator();
             fillToolStripButton = new ToolStripButton();
             toolStripSeparator5 = new ToolStripSeparator();
+            eraseToolStripButton = new ToolStripButton();
             toolStripDropDownButton = new ToolStripDropDownButton();
             toolStripLabel1 = new ToolStripLabel();
-            toolStripComboBox = new ToolStripComboBox();
+            widhtComboBox = new ToolStripComboBox();
             menuStrip1 = new MenuStrip();
             fileToolStripMenuItem = new ToolStripMenuItem();
             editToolStripMenuItem = new ToolStripMenuItem();
             toolImageList = new ImageList(components);
-            eraseToolStripButton = new ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)sizeNumericUpDown).BeginInit();
             toolStrip.SuspendLayout();
             menuStrip1.SuspendLayout();
             SuspendLayout();
@@ -75,34 +72,10 @@
             pictureBox.MouseMove += pictureBox_MouseMove;
             pictureBox.MouseUp += pictureBox_MouseUp;
             // 
-            // sizeNumericUpDown
-            // 
-            sizeNumericUpDown.DecimalPlaces = 1;
-            sizeNumericUpDown.Increment = new decimal(new int[] { 1, 0, 0, 65536 });
-            sizeNumericUpDown.Location = new Point(276, 73);
-            sizeNumericUpDown.Maximum = new decimal(new int[] { 50, 0, 0, 0 });
-            sizeNumericUpDown.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            sizeNumericUpDown.Name = "sizeNumericUpDown";
-            sizeNumericUpDown.Size = new Size(80, 23);
-            sizeNumericUpDown.TabIndex = 2;
-            sizeNumericUpDown.Value = new decimal(new int[] { 1, 0, 0, 0 });
-            sizeNumericUpDown.ValueChanged += sizeNumericUpDown_ValueChanged;
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.BackColor = SystemColors.Control;
-            label1.ForeColor = Color.Black;
-            label1.Location = new Point(214, 77);
-            label1.Name = "label1";
-            label1.Size = new Size(56, 15);
-            label1.TabIndex = 3;
-            label1.Text = "Pen Size :";
-            // 
             // toolStrip
             // 
             toolStrip.ImageScalingSize = new Size(25, 25);
-            toolStrip.Items.AddRange(new ToolStripItem[] { newToolStripButton, fileOpenToolStripButton, saveToolStripButton, SaveAsToolStripButton, toolStripSeparator1, undoToolStripButton, redoToolStripButton, toolStripSeparator2, colorLabel, colorToolStripButton, toolStripSeparator4, fillToolStripButton, toolStripSeparator5, eraseToolStripButton, toolStripDropDownButton, toolStripLabel1, toolStripComboBox });
+            toolStrip.Items.AddRange(new ToolStripItem[] { newToolStripButton, fileOpenToolStripButton, saveToolStripButton, SaveAsToolStripButton, toolStripSeparator1, undoToolStripButton, redoToolStripButton, toolStripSeparator2, colorLabel, colorToolStripButton, toolStripDropDownButton, toolStripLabel1, widhtComboBox, toolStripSeparator4, fillToolStripButton, toolStripSeparator5, eraseToolStripButton });
             toolStrip.Location = new Point(0, 24);
             toolStrip.Name = "toolStrip";
             toolStrip.Size = new Size(826, 32);
@@ -217,6 +190,16 @@
             toolStripSeparator5.Name = "toolStripSeparator5";
             toolStripSeparator5.Size = new Size(6, 32);
             // 
+            // eraseToolStripButton
+            // 
+            eraseToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            eraseToolStripButton.Image = Properties.Resources.clear256_24830;
+            eraseToolStripButton.ImageTransparentColor = Color.Magenta;
+            eraseToolStripButton.Name = "eraseToolStripButton";
+            eraseToolStripButton.Size = new Size(29, 29);
+            eraseToolStripButton.Text = "Clear All";
+            eraseToolStripButton.Click += eraseToolStripButton_Click;
+            // 
             // toolStripDropDownButton
             // 
             toolStripDropDownButton.ForeColor = Color.Black;
@@ -233,12 +216,13 @@
             toolStripLabel1.Size = new Size(57, 29);
             toolStripLabel1.Text = "  Tool size";
             // 
-            // toolStripComboBox
+            // widhtComboBox
             // 
-            toolStripComboBox.FlatStyle = FlatStyle.Standard;
-            toolStripComboBox.Name = "toolStripComboBox";
-            toolStripComboBox.Size = new Size(75, 32);
-            toolStripComboBox.Text = "1";
+            widhtComboBox.FlatStyle = FlatStyle.Standard;
+            widhtComboBox.Name = "widhtComboBox";
+            widhtComboBox.Size = new Size(75, 32);
+            widhtComboBox.Text = "1";
+            widhtComboBox.SelectedIndexChanged += widhtComboBox_SelectedIndexChanged;
             // 
             // menuStrip1
             // 
@@ -279,16 +263,6 @@
             toolImageList.Images.SetKeyName(10, "software-shape-polygon_97830.png");
             toolImageList.Images.SetKeyName(11, "polygon_icon_215372.png");
             // 
-            // eraseToolStripButton
-            // 
-            eraseToolStripButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
-            eraseToolStripButton.Image = Properties.Resources.clear256_24830;
-            eraseToolStripButton.ImageTransparentColor = Color.Magenta;
-            eraseToolStripButton.Name = "eraseToolStripButton";
-            eraseToolStripButton.Size = new Size(29, 29);
-            eraseToolStripButton.Text = "Clear All";
-            eraseToolStripButton.Click += eraseToolStripButton_Click;
-            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -297,16 +271,13 @@
             ClientSize = new Size(826, 675);
             Controls.Add(toolStrip);
             Controls.Add(menuStrip1);
-            Controls.Add(label1);
-            Controls.Add(sizeNumericUpDown);
             Controls.Add(pictureBox);
             ForeColor = Color.White;
             MainMenuStrip = menuStrip1;
             MinimumSize = new Size(300, 300);
             Name = "Form1";
-            Text = "Form1";
+            Text = "BlaBlaPaint";
             ((System.ComponentModel.ISupportInitialize)pictureBox).EndInit();
-            ((System.ComponentModel.ISupportInitialize)sizeNumericUpDown).EndInit();
             toolStrip.ResumeLayout(false);
             toolStrip.PerformLayout();
             menuStrip1.ResumeLayout(false);
@@ -318,8 +289,6 @@
         #endregion
 
         private PictureBox pictureBox;
-        private NumericUpDown sizeNumericUpDown;
-        private Label label1;
         private ToolStrip toolStrip;
         private MenuStrip menuStrip1;
         private ToolStripMenuItem fileToolStripMenuItem;
@@ -333,7 +302,7 @@
         private ToolStripSeparator toolStripSeparator1;
         private ToolStripSeparator toolStripSeparator2;
         private ToolStripDropDownButton toolStripDropDownButton;
-        private ToolStripComboBox toolStripComboBox;
+        private ToolStripComboBox widhtComboBox;
         private ToolStripLabel toolStripLabel1;
         private ToolStripButton colorToolStripButton;
         private ToolStripButton fillToolStripButton;
